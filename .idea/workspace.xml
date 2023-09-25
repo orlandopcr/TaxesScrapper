@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="bd63527f-1a13-4d72-bfc3-a7252d8b54f9" name="Default Changelist" comment="" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
+  <component name="ProjectId" id="1qDbf3J6i50xWbU7KzktXIg1bil" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showExcludedFiles" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/webdriver" />
+  </component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/data" />
+      <recent name="$PROJECT_DIR$" />
+      <recent name="$PROJECT_DIR$/webdriver" />
+    </key>
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/webdriver" />
+      <recent name="$PROJECT_DIR$/data" />
+    </key>
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="bd63527f-1a13-4d72-bfc3-a7252d8b54f9" name="Default Changelist" comment="" />
+      <created>1616617207839</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1616617207839</updated>
+      <workItem from="1616617209960" duration="4106000" />
+      <workItem from="1616876039703" duration="1330000" />
+      <workItem from="1617051981042" duration="3146000" />
+      <workItem from="1617390736696" duration="4718000" />
+      <workItem from="1618602937003" duration="116000" />
+      <workItem from="1629159333341" duration="3776000" />
+      <workItem from="1629221415983" duration="3937000" />
+      <workItem from="1629239552291" duration="3091000" />
+      <workItem from="1629326492103" duration="6311000" />
+      <workItem from="1629383702480" duration="998000" />
+      <workItem from="1629486194488" duration="621000" />
+      <workItem from="1639509783034" duration="1405000" />
+      <workItem from="1639511724780" duration="56000" />
+      <workItem from="1639838496615" duration="11545000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="1" />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="458" y="201" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog" timestamp="1629159616118">
+      <screen x="0" y="0" width="1440" height="900" />
+    </state>
+    <state x="458" y="201" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog/0.0.1440.900@0.0.1440.900" timestamp="1629159616118" />
+  </component>
+</project>
