@@ -9,7 +9,8 @@ class Writer:
     def write(self, region, commune, rol_first, rol_second):
         wb = load_workbook("data/output.xlsx")
         ws = wb.worksheets[0]
-        do_format = True
+        do_format = True #SOLO UNO DEBERIA ESTAR ACTIVADO O NINGUNO
+        do_special_format = False
         if self.data is None:
             ws.append([commune, '{}-{}'.format(rol_first, rol_second), 'SIN INFORMACION'])
         else:
@@ -18,6 +19,17 @@ class Writer:
                     ws.append(self.format_output(self.data))
                 except:
                     ws.append([self.data[0], self.data[1], 'ERROR ESCRITURA'])
+
+            if do_special_format:
+                try:
+                    self.special_format_output(self.data, ws)
+                except:
+                    try:
+                        register = self.data[0]
+                        ws.append([register[0], register[1], register[1].split('-')[0], register[1].split('-')[1], register[2]])
+                    except:
+                        ws.append([self.data[0], 'ERROR ESCRITURA'])
+
             else:
                 for item in self.data:
                     ws.append(item)
@@ -49,3 +61,12 @@ class Writer:
             return [commune, rol, rol.split('-')[0], rol.split('-')[1], overall_state, installments_debt, vigentes_installments, str(total_debt)]
         else:
             return [commune, rol, rol.split('-')[0], rol.split('-')[1], installments_debt, str(total_debt)]
+
+    def special_format_output(self, data, writter):
+        writter.append([''])
+        for index, register in enumerate(data):
+            if index == 0:
+                writter.append([register[0], register[1], register[1].split('-')[0], register[1].split('-')[1], register[2], register[5]])
+            else:
+                writter.append(['', '', '', '', register[2], register[5]])
+

@@ -552,7 +552,11 @@ class LocationHelper:
                               'SAN JOSE DE MAIPO': 'SAN JOSÉ DE MAIPO',
                               'MACHALI': 'MACHALÍ',
                               'LOS ANGELES': 'LOS ANGELES',
-                              'NIQUEN': 'ÑIQUÉN'}
+                              'NIQUEN': 'ÑIQUÉN',
+                              'NUBLE': 'ÑUBLE',
+                              'SAN JOSE DE MAIPO': 'SAN JOSÉ DE MAIPO',
+                              'TIL TIL': 'TIL-TIL',
+                              }
 
         if commune in communes_translate.keys():
             return communes_translate[commune]
