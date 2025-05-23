@@ -22,17 +22,15 @@ class Scrapper:
         output_data = []
 
         detalle_vigentes = False
-        chrome_options = Options()
-        chrome_options.add_argument("--headless")
 
-        service = Service(executable_path='/Users/orlando/Dev/Playground/cobanc/scrapper/webdriver/chromedriver')
-        driver = webdriver.Chrome(service=service, options=chrome_options)
+        options = webdriver.ChromeOptions()
+        options.add_argument("--headless=new")
+        driver = webdriver.Chrome(options=options)
 
         driver.get('https://www4.sii.cl/cuotaanualbienesraicespubinternetui/#!/buscaRolPagos')
         # select region
-        time.sleep(1)
+        time.sleep(2)
         try:
-            #pdb.set_trace()
             if region == "REGION DEL LIBERTADOR BERNARDO O'HIGGINS":
                 region_select = "//select[@ng-model='regionModel']/option[contains(text(), 'BERNARDO')]"
             elif region == "REGION DE AYSÉN DEL GENERAL CARLOS IBÁÑEZ DEL CAMPO":
@@ -44,7 +42,7 @@ class Scrapper:
         except:
             output_data.append([commune, '{}-{}'.format(rol_first, rol_second), 'ERROR REGION: {}'.format(region)])
             return output_data
-        time.sleep(1)
+        time.sleep(2)
 
         # select commune
         try:
@@ -68,11 +66,12 @@ class Scrapper:
         driver.find_element("xpath", '//button[text()="Buscar"]').click()
 
         #search
-        time.sleep(1)
+        time.sleep(3)
 
         no_debt = False
         exempt = False
         auto_payment = False
+        no_role = False
         try:
             if 'Bien Raíz no registra cuotas de contribuciones no pagadas.'.lower() == Alert(driver).text.lower():
                 exempt = True
@@ -83,12 +82,15 @@ class Scrapper:
             if 'La propiedad posee convenio de pago automático (PAC) con Tesorería General de la República, Si desea continuar con el pago, entonces presione Aceptar, en caso contrario, presione Cancelar'.lower() == Alert(driver).text.lower():
                 auto_payment = True
                 Alert(driver).accept()
+            if 'No existe una propiedad asociada a este Nro de Rol de Avalúo.'.lower() == Alert(driver).text.lower():
+                no_role = True
+                Alert(driver).accept()
             else:
                 Alert(driver).accept()
         except:
             pass
 
-        time.sleep(1)
+        time.sleep(3)
 
         scrapped_commune = driver.find_elements('xpath', "//div[@ng-repeat='vencidas  in resultado']/table[@class='tabla']/tbody/tr/td[1]")
         role = driver.find_elements('xpath', "//div[@ng-repeat='vencidas  in resultado']/table[@class='tabla']/tbody/tr/td[2]")
@@ -124,6 +126,8 @@ class Scrapper:
                 output_data.append([commune, '{}-{}'.format(rol_first, rol_second), 'REVISAR EXENTO'])
             elif auto_payment:
                 output_data.append([commune, '{}-{}'.format(rol_first, rol_second), 'PAGO AUTOMATICO'])
+            elif no_role:
+                output_data.append([commune, '{}-{}'.format(rol_first, rol_second), 'ROL NO EXISTE'])
             else:
                 output_data.append([commune, '{}-{}'.format(rol_first, rol_second), 'SIN INFORMACION'])
         else:

@@ -79,7 +79,7 @@ class LocationHelper:
                         {"name": "Los Vilos"},
                         {"name": "Monte Patria"},
                         {"name": "Ovalle"},
-                        {"name": "Paiguano"},
+                        {"name": "Paihuano"},
                         {"name": "Punitaqui"},
                         {"name": "Río Hurtado"},
                         {"name": "Salamanca"},
@@ -107,7 +107,7 @@ class LocationHelper:
                         {"name": "La Cruz"},
                         {"name": "La Ligua"},
                         {"name": "Limache"},
-                        {"name": "Llaillay"},
+                        {"name": "Llay-llay"},
                         {"name": "Los Andes"},
                         {"name": "Nogales"},
                         {"name": "Olmué"},
@@ -180,7 +180,7 @@ class LocationHelper:
                         {"name": "Renca"},
                         {"name": "San Bernardo"},
                         {"name": "SAN JOAQUIN"},
-                        {"name": "San José Maipo"},
+                        {"name": "San José de Maipo"},
                         {"name": "San Miguel"},
                         {"name": "San Pedro"},
                         {"name": "San Ramón"},
@@ -190,7 +190,7 @@ class LocationHelper:
                         {"name": "Santiago este"},
                         {"name": "Santiago oeste"},
                         {"name": "Talagante"},
-                        {"name": "Til til"},
+                        {"name": "Til-til"},
                         {"name": "Vitacura"}
                     ]
                 },
@@ -229,7 +229,7 @@ class LocationHelper:
                         {"name": "Rengo"},
                         {"name": "Requínoa"},
                         {"name": "San Fernando"},
-                        {"name": "SN. FCO. DE MOSTAZAL"},
+                        {"name": "SAN FRANCISCO DE MOSTAZAL"},
                         {"name": "San Vicente"},
                         {"name": "Santa Cruz"}
                     ]
@@ -556,6 +556,12 @@ class LocationHelper:
                               'NUBLE': 'ÑUBLE',
                               'SAN JOSE DE MAIPO': 'SAN JOSÉ DE MAIPO',
                               'TIL TIL': 'TIL-TIL',
+                              'DONIHUE': 'DOÑIHUE',
+                              'MAULLIN': 'MAULLÍN',
+                              'OMLMUE': 'OLMUÉ',
+                              'PUREN': 'PURÉN',
+                              'SAN RAMON': 'SAN RAMÓN',
+                              'SANTA MARIA': 'SANTA MARÍA',
                               }
 
         if commune in communes_translate.keys():

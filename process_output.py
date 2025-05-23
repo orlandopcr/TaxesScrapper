@@ -9,8 +9,8 @@ class Writer:
     def write(self, region, commune, rol_first, rol_second):
         wb = load_workbook("data/output.xlsx")
         ws = wb.worksheets[0]
-        do_format = True #SOLO UNO DEBERIA ESTAR ACTIVADO O NINGUNO
-        do_special_format = False
+        do_format = False #SOLO UNO DEBERIA ESTAR ACTIVADO O NINGUNO
+        do_special_format = True
         if self.data is None:
             ws.append([commune, '{}-{}'.format(rol_first, rol_second), 'SIN INFORMACION'])
         else:
@@ -20,7 +20,7 @@ class Writer:
                 except:
                     ws.append([self.data[0], self.data[1], 'ERROR ESCRITURA'])
 
-            if do_special_format:
+            elif do_special_format:
                 try:
                     self.special_format_output(self.data, ws)
                 except:
@@ -38,6 +38,7 @@ class Writer:
     def format_output(self, data):
         total_debt = 0
         installments_debt = ''
+        dates_overdue = ''
         vigentes_installments = ''
         overall_state = ''
         # Data should come as [['ANTOFAGASTA', '15330-00023', '3-2019', '30-09-2019', '$ 188.292', '$ 231.227']] Look the array
@@ -48,9 +49,10 @@ class Writer:
                 _, _, installment, _, _, final_amount = register
 
                 if final_amount == 'VIGENTE':
-                    _, _, installment, _, final_amount, state = register
+                    _, _, installment, date_overdue, final_amount, state = register
                     overall_state = state
                     vigentes_installments += '{}, '.format(final_amount)
+                    dates_overdue += '{}, '.format(date_overdue)
                 
                 total_debt += int(final_amount.replace('$', '').replace('.', '').strip())
                 installments_debt += '{}, '.format(installment)
@@ -58,7 +60,7 @@ class Writer:
                 return register
 
         if overall_state == 'VIGENTE':
-            return [commune, rol, rol.split('-')[0], rol.split('-')[1], overall_state, installments_debt, vigentes_installments, str(total_debt)]
+            return [commune, rol, rol.split('-')[0], rol.split('-')[1], overall_state, installments_debt, dates_overdue, vigentes_installments, str(total_debt)]
         else:
             return [commune, rol, rol.split('-')[0], rol.split('-')[1], installments_debt, str(total_debt)]
 
