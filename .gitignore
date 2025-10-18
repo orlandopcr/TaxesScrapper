@@ -1,0 +1,20 @@
+# Directorio data - ignorar archivos futuros pero mantener los actuales del repo
+# (los archivos ya trackeados se mantendrán, los nuevos se ignorarán)
+data/*
+!data/.gitkeep
+
+# Archivos de Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+
+# IDEs
+.idea/
+.vscode/
+
+# Archivos del sistema
+.DS_Store
+
+# ChromeDriver
+webdriver/chromedriver
