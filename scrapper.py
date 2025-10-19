@@ -1,10 +1,43 @@
 import time
 import pdb
+import unicodedata
 from selenium import webdriver
 from selenium.webdriver.common.alert import Alert
 from selenium.webdriver.support.select import Select
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.by import By
+
+
+def normalize_text(text):
+    """
+    Normaliza texto para comparación agnóstica:
+    - Elimina tildes (á→a, é→e, í→i, ó→o, ú→u, ñ→n)
+    - Convierte a mayúsculas
+    - Elimina espacios, guiones y caracteres especiales
+    
+    Ejemplos:
+    - "Con-Con" → "CONCON"
+    - "Concón" → "CONCON"
+    - "Viña del Mar" → "VINADELMAR"
+    - "REGIÓN METROPOLITANA" → "REGIONMETROPOLITANA"
+    """
+    if not text:
+        return ""
+    
+    # Paso 1: Convertir a mayúsculas
+    text = text.upper()
+    
+    # Paso 2: Eliminar tildes (descomposición NFD y filtrar marcas diacríticas)
+    text = ''.join(
+        char for char in unicodedata.normalize('NFD', text)
+        if unicodedata.category(char) != 'Mn'
+    )
+    
+    # Paso 3: Eliminar espacios, guiones, puntos y caracteres especiales (solo alfanuméricos)
+    text = ''.join(char for char in text if char.isalnum())
+    
+    return text
 
 
 class Scrapper:
@@ -36,77 +69,129 @@ class Scrapper:
 
         # Función para realizar todo el proceso de búsqueda y scraping
         def perform_search_and_scrap():
+            print(f"\n→ Procesando: Región={region}, Comuna={commune}, ROL={rol_first}-{rol_second}")
+            
             driver.get('https://www4.sii.cl/cuotaanualbienesraicespubinternetui/#!/buscaRolPagos')
-            # select region
+            
+            # select region con normalización
             time.sleep(2)
             try:
-                if region == "REGION DEL LIBERTADOR BERNARDO O'HIGGINS":
-                    region_select = "//select[@ng-model='regionModel']/option[contains(text(), 'BERNARDO')]"
-                elif region == "REGION DE AYSÉN DEL GENERAL CARLOS IBÁÑEZ DEL CAMPO":
-                    region_select = "//select[@ng-model='regionModel']/option[contains(text(), 'DEL CAMPO')]"
-                else:
-                    region_select = "//select[@ng-model='regionModel']/option[text()='" + region + "']"
-                driver.find_element("xpath", region_select).click()
+                normalized_region = normalize_text(region)
+                print(f"  → Buscando región: '{region}' (normalizado: '{normalized_region}')")
+                
+                # Buscar la opción de región que coincida
+                found = False
+                region_options = driver.find_elements(By.XPATH, "//select[@ng-model='regionModel']/option")
+                for option in region_options:
+                    if normalize_text(option.text) == normalized_region:
+                        option.click()
+                        print(f"  ✓ Región seleccionada: {option.text}")
+                        found = True
+                        break
+                
+                if not found:
+                    print(f"  ✗ No se encontró coincidencia para región '{region}'")
+                    output_data.append([commune, '{}-{}'.format(rol_first, rol_second), 'ERROR REGION: {}'.format(region)])
+                    return None, None, None, None, None, None, None, None, None, None, None, True
 
-            except:
+            except Exception as e:
+                print(f"  ✗ Error seleccionando región '{region}': {e}")
                 output_data.append([commune, '{}-{}'.format(rol_first, rol_second), 'ERROR REGION: {}'.format(region)])
-                return None, None, None, None, None, None, None, None, None, None, True  # Error flag
-            time.sleep(2)
+                return None, None, None, None, None, None, None, None, None, None, None, True
 
-            # select commune
+            # select commune con normalización
+            time.sleep(2)  # Esperar a que el dropdown de comunas cargue
             try:
-                select = Select(driver.find_element('id', 'codigo'))
-                select.select_by_visible_text(commune)
-            except:
+                commune_select = Select(driver.find_element(By.ID, 'codigo'))
+                normalized_commune = normalize_text(commune)
+                print(f"  → Buscando comuna: '{commune}' (normalizado: '{normalized_commune}')")
+                
+                # Buscar la opción que coincida con la normalización
+                found = False
+                for option in commune_select.options:
+                    if normalize_text(option.text) == normalized_commune:
+                        commune_select.select_by_visible_text(option.text)
+                        print(f"  ✓ Comuna seleccionada: {option.text}")
+                        found = True
+                        break
+                
+                if not found:
+                    print(f"  ✗ No se encontró coincidencia para comuna '{commune}'")
+                    print(f"  → Opciones disponibles: {[opt.text for opt in commune_select.options[:5]]}...")
+                    output_data.append([commune, '{}-{}'.format(rol_first, rol_second), 'ERROR COMUNA'])
+                    return None, None, None, None, None, None, None, None, None, None, None, True
+                    
+            except Exception as e:
+                print(f"  ✗ Error seleccionando comuna '{commune}': {e}")
                 output_data.append([commune, '{}-{}'.format(rol_first, rol_second), 'ERROR COMUNA'])
-                return None, None, None, None, None, None, None, None, None, None, True  # Error flag
+                return None, None, None, None, None, None, None, None, None, None, None, True
 
-            # set rol
-            element = driver.find_element("id", 'manzana')
+            # set rol - IMPORTANTE: limpiar campos antes de escribir
+            print(f"  → Ingresando ROL: {rol_first}-{rol_second}")
+            element = driver.find_element(By.ID, 'manzana')
+            element.clear()  # Limpiar campo antes de escribir
             element.send_keys(rol_first)
 
             # set rol digit
-            element = driver.find_element("id", 'predio')
+            element = driver.find_element(By.ID, 'predio')
+            element.clear()  # Limpiar campo antes de escribir
             element.send_keys(rol_second)
 
-            #search
-            driver.find_element("xpath", '//button[text()="Buscar"]').click()
+            # search
+            driver.find_element(By.XPATH, '//button[text()="Buscar"]').click()
+            print(f"  → Búsqueda enviada, esperando respuesta...")
 
-            #search
-            time.sleep(3)
+            # Esperar tiempo fijo para que carguen ambas tablas (morosas y vigentes)
+            time.sleep(4)
 
+            # Detectar alertas con textos EXACTOS del SII
             no_debt = False
             exempt = False
             auto_payment = False
             no_role = False
+            
             try:
-                if 'Bien Raíz no registra cuotas de contribuciones no pagadas.'.lower() == Alert(driver).text.lower():
-                    exempt = True
-                    Alert(driver).accept()
-                if 'bien raíz no registra cuotas de contribuciones no pagadas. si ud. ha efectuado algún pago de contribuciones para este predio a través de internet sii, puede consultar los comprobantes de dichos pagos presionando el botón aceptar, en caso contrario presione cancelar' == Alert(driver).text.lower():
+                alert = Alert(driver)
+                alert_text = alert.text.lower()
+                
+                # Importante: el orden importa, verificar el texto más específico primero
+                if alert_text == 'bien raíz no registra cuotas de contribuciones no pagadas. si ud. ha efectuado algún pago de contribuciones para este predio a través de internet sii, puede consultar los comprobantes de dichos pagos presionando el botón aceptar, en caso contrario presione cancelar':
                     no_debt = True
-                    Alert(driver).accept()
-                if 'La propiedad posee convenio de pago automático (PAC) con Tesorería General de la República, Si desea continuar con el pago, entonces presione Aceptar, en caso contrario, presione Cancelar'.lower() == Alert(driver).text.lower():
+                    print(f"  ⚠ Alerta detectada: SIN DEUDA")
+                    alert.accept()
+                elif alert_text == 'bien raíz no registra cuotas de contribuciones no pagadas.':
+                    exempt = True
+                    print(f"  ⚠ Alerta detectada: EXENTO")
+                    alert.accept()
+                elif alert_text == 'la propiedad posee convenio de pago automático (pac) con tesorería general de la república, si desea continuar con el pago, entonces presione aceptar, en caso contrario, presione cancelar':
                     auto_payment = True
-                    Alert(driver).accept()
-                if 'No existe una propiedad asociada a este Nro de Rol de Avalúo.'.lower() == Alert(driver).text.lower():
+                    print(f"  ⚠ Alerta detectada: PAGO AUTOMATICO (PAC)")
+                    alert.accept()
+                elif alert_text == 'no existe una propiedad asociada a este nro de rol de avalúo.':
                     no_role = True
-                    Alert(driver).accept()
+                    print(f"  ⚠ Alerta detectada: ROL NO EXISTE")
+                    alert.accept()
                 else:
-                    Alert(driver).accept()
+                    print(f"  ⚠ Alerta desconocida: '{alert.text}'")
+                    alert.accept()
             except:
+                # No hay alerta
                 pass
 
-            time.sleep(3)
+            time.sleep(1)
 
             # Scrapear los elementos de deudas morosas
-            scrapped_commune = driver.find_elements('xpath', "//div[@ng-repeat='vencidas  in resultado']/table[@class='tabla']/tbody/tr/td[1]")
-            role = driver.find_elements('xpath', "//div[@ng-repeat='vencidas  in resultado']/table[@class='tabla']/tbody/tr/td[2]")
-            overdue_dates = driver.find_elements('xpath', "//div[@ng-repeat='vencidas  in resultado']/table[@class='tabla']/tbody/tr/td[4]")
-            expire_date = driver.find_elements('xpath', "//div[@ng-repeat='vencidas  in resultado']/table[@class='tabla']/tbody/tr/td[6]")
-            amount_in_time = driver.find_elements('xpath', "//div[@ng-repeat='vencidas  in resultado']/table[@class='tabla']/tbody/tr/td[5]")
-            total_amount = driver.find_elements('xpath', "//div[@ng-repeat='vencidas  in resultado']/table[@class='tabla']/tbody/tr/td[7]")
-            vigentes = driver.find_elements('xpath', "//div[@ng-repeat='vigentes  in resultado']/div/table[@class='tabla']")
+            scrapped_commune = driver.find_elements(By.XPATH, "//div[@ng-repeat='vencidas  in resultado']/table[@class='tabla']/tbody/tr/td[1]")
+            role = driver.find_elements(By.XPATH, "//div[@ng-repeat='vencidas  in resultado']/table[@class='tabla']/tbody/tr/td[2]")
+            overdue_dates = driver.find_elements(By.XPATH, "//div[@ng-repeat='vencidas  in resultado']/table[@class='tabla']/tbody/tr/td[4]")
+            expire_date = driver.find_elements(By.XPATH, "//div[@ng-repeat='vencidas  in resultado']/table[@class='tabla']/tbody/tr/td[6]")
+            amount_in_time = driver.find_elements(By.XPATH, "//div[@ng-repeat='vencidas  in resultado']/table[@class='tabla']/tbody/tr/td[5]")
+            total_amount = driver.find_elements(By.XPATH, "//div[@ng-repeat='vencidas  in resultado']/table[@class='tabla']/tbody/tr/td[7]")
+            vigentes = driver.find_elements(By.XPATH, "//div[@ng-repeat='vigentes  in resultado']/div/table[@class='tabla']")
+            
+            cuotas_morosas = len(overdue_dates)
+            cuotas_vigentes = len(vigentes)
+            print(f"  ✓ Cuotas encontradas: {cuotas_morosas} morosas, {cuotas_vigentes} vigentes")
             
             return scrapped_commune, role, overdue_dates, expire_date, amount_in_time, total_amount, vigentes, no_debt, exempt, auto_payment, no_role, False
 
@@ -120,32 +205,36 @@ class Scrapper:
             return output_data
         
         instalments_count = len(overdue_dates)
+        vigentes_count = len(vigentes)
         
-        # Retry logic: si no se encontraron deudas, reintentar en casos sospechosos
-        # Casos a reintentar: SIN INFORMACION, REVISAR EXENTO, o cuando no hay alertas claras
-        max_retries = 1
+        # Retry logic mejorado: casos sospechosos merecen más intentos
+        # Caso sospechoso: No hay cuotas morosas Y no hay alertas claras
+        # (sin importar si hay vigentes, porque la tabla de morosas pudo no cargar)
+        is_suspicious = instalments_count == 0 and not (no_debt or auto_payment or no_role or exempt)
+        max_retries = 2 if is_suspicious else 1
         retry_count = 0
         should_retry = instalments_count == 0 and not (no_debt or auto_payment or no_role)
         
         while should_retry and retry_count < max_retries:
             retry_count += 1
-            print(f"Reintento {retry_count}/{max_retries} - Recargando página y reejecutando búsqueda...")
+            print(f"⚠ Reintento {retry_count}/{max_retries} - Sin cuotas morosas y sin alertas claras, recargando página...")
             scrapped_commune, role, overdue_dates, expire_date, amount_in_time, total_amount, vigentes, no_debt, exempt, auto_payment, no_role, has_error = perform_search_and_scrap()
             
             if has_error:
                 break
                 
             instalments_count = len(overdue_dates)
+            vigentes_count = len(vigentes)
             should_retry = instalments_count == 0 and not (no_debt or auto_payment or no_role)
         
         active_instalments_count = None
 
         if detalle_vigentes:
-            vigentes_commune = driver.find_elements('xpath', "//div[@ng-repeat='vigentes  in resultado']/div/table[@class='tabla']/tbody/tr/td[1]")
-            vigentes_role = driver.find_elements('xpath', "//div[@ng-repeat='vigentes  in resultado']/div/table[@class='tabla']/tbody/tr/td[2]")
-            vigentes_dates = driver.find_elements('xpath', "//div[@ng-repeat='vigentes  in resultado']/div/table[@class='tabla']/tbody/tr/td[5]")
-            vigentes_expire_date = driver.find_elements('xpath', "//div[@ng-repeat='vigentes  in resultado']/div/table[@class='tabla']/tbody/tr/td[7]")
-            vigentes_amount_in_time = driver.find_elements('xpath', "//div[@ng-repeat='vigentes  in resultado']/div/table[@class='tabla']/tbody/tr/td[9]")
+            vigentes_commune = driver.find_elements(By.XPATH, "//div[@ng-repeat='vigentes  in resultado']/div/table[@class='tabla']/tbody/tr/td[1]")
+            vigentes_role = driver.find_elements(By.XPATH, "//div[@ng-repeat='vigentes  in resultado']/div/table[@class='tabla']/tbody/tr/td[2]")
+            vigentes_dates = driver.find_elements(By.XPATH, "//div[@ng-repeat='vigentes  in resultado']/div/table[@class='tabla']/tbody/tr/td[5]")
+            vigentes_expire_date = driver.find_elements(By.XPATH, "//div[@ng-repeat='vigentes  in resultado']/div/table[@class='tabla']/tbody/tr/td[7]")
+            vigentes_amount_in_time = driver.find_elements(By.XPATH, "//div[@ng-repeat='vigentes  in resultado']/div/table[@class='tabla']/tbody/tr/td[9]")
             active_instalments_count = len(vigentes_dates)
             vigentes_total_amount_state = ['VIGENTE'] * active_instalments_count #Se usará para definir el estado
 
