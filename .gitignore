@@ -3,6 +3,10 @@
 data/*
 !data/.gitkeep
 
+# Logs
+logs/
+*.log
+
 # Archivos de Python
 __pycache__/
 *.py[cod]

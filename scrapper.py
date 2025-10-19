@@ -1,12 +1,16 @@
 import time
 import pdb
 import unicodedata
+import logging
 from selenium import webdriver
 from selenium.webdriver.common.alert import Alert
 from selenium.webdriver.support.select import Select
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
+
+# Configurar logger para este módulo
+logger = logging.getLogger(__name__)
 
 
 def normalize_text(text):
@@ -69,7 +73,7 @@ class Scrapper:
 
         # Función para realizar todo el proceso de búsqueda y scraping
         def perform_search_and_scrap():
-            print(f"\n→ Procesando: Región={region}, Comuna={commune}, ROL={rol_first}-{rol_second}")
+            logger.info(f"Procesando: Región={region}, Comuna={commune}, ROL={rol_first}-{rol_second}")
             
             driver.get('https://www4.sii.cl/cuotaanualbienesraicespubinternetui/#!/buscaRolPagos')
             
@@ -77,7 +81,7 @@ class Scrapper:
             time.sleep(2)
             try:
                 normalized_region = normalize_text(region)
-                print(f"  → Buscando región: '{region}' (normalizado: '{normalized_region}')")
+                logger.info(f"Buscando región: '{region}' (normalizado: '{normalized_region}')")
                 
                 # Buscar la opción de región que coincida
                 found = False
@@ -85,17 +89,17 @@ class Scrapper:
                 for option in region_options:
                     if normalize_text(option.text) == normalized_region:
                         option.click()
-                        print(f"  ✓ Región seleccionada: {option.text}")
+                        logger.info(f"Región seleccionada: {option.text}")
                         found = True
                         break
                 
                 if not found:
-                    print(f"  ✗ No se encontró coincidencia para región '{region}'")
+                    logger.warning(f"No se encontró coincidencia para región '{region}'")
                     output_data.append([commune, '{}-{}'.format(rol_first, rol_second), 'ERROR REGION: {}'.format(region)])
                     return None, None, None, None, None, None, None, None, None, None, None, True
 
             except Exception as e:
-                print(f"  ✗ Error seleccionando región '{region}': {e}")
+                logger.error(f"Error seleccionando región '{region}': {e}")
                 output_data.append([commune, '{}-{}'.format(rol_first, rol_second), 'ERROR REGION: {}'.format(region)])
                 return None, None, None, None, None, None, None, None, None, None, None, True
 
@@ -104,30 +108,30 @@ class Scrapper:
             try:
                 commune_select = Select(driver.find_element(By.ID, 'codigo'))
                 normalized_commune = normalize_text(commune)
-                print(f"  → Buscando comuna: '{commune}' (normalizado: '{normalized_commune}')")
+                logger.info(f"Buscando comuna: '{commune}' (normalizado: '{normalized_commune}')")
                 
                 # Buscar la opción que coincida con la normalización
                 found = False
                 for option in commune_select.options:
                     if normalize_text(option.text) == normalized_commune:
                         commune_select.select_by_visible_text(option.text)
-                        print(f"  ✓ Comuna seleccionada: {option.text}")
+                        logger.info(f"Comuna seleccionada: {option.text}")
                         found = True
                         break
                 
                 if not found:
-                    print(f"  ✗ No se encontró coincidencia para comuna '{commune}'")
-                    print(f"  → Opciones disponibles: {[opt.text for opt in commune_select.options[:5]]}...")
+                    logger.warning(f"No se encontró coincidencia para comuna '{commune}'")
+                    logger.info(f"Opciones disponibles: {[opt.text for opt in commune_select.options[:5]]}...")
                     output_data.append([commune, '{}-{}'.format(rol_first, rol_second), 'ERROR COMUNA'])
                     return None, None, None, None, None, None, None, None, None, None, None, True
                     
             except Exception as e:
-                print(f"  ✗ Error seleccionando comuna '{commune}': {e}")
+                logger.error(f"Error seleccionando comuna '{commune}': {e}")
                 output_data.append([commune, '{}-{}'.format(rol_first, rol_second), 'ERROR COMUNA'])
                 return None, None, None, None, None, None, None, None, None, None, None, True
 
             # set rol - IMPORTANTE: limpiar campos antes de escribir
-            print(f"  → Ingresando ROL: {rol_first}-{rol_second}")
+            logger.info(f"Ingresando ROL: {rol_first}-{rol_second}")
             element = driver.find_element(By.ID, 'manzana')
             element.clear()  # Limpiar campo antes de escribir
             element.send_keys(rol_first)
@@ -139,7 +143,7 @@ class Scrapper:
 
             # search
             driver.find_element(By.XPATH, '//button[text()="Buscar"]').click()
-            print(f"  → Búsqueda enviada, esperando respuesta...")
+            logger.info("Búsqueda enviada, esperando respuesta...")
 
             # Esperar tiempo fijo para que carguen ambas tablas (morosas y vigentes)
             time.sleep(4)
@@ -157,22 +161,22 @@ class Scrapper:
                 # Importante: el orden importa, verificar el texto más específico primero
                 if alert_text == 'bien raíz no registra cuotas de contribuciones no pagadas. si ud. ha efectuado algún pago de contribuciones para este predio a través de internet sii, puede consultar los comprobantes de dichos pagos presionando el botón aceptar, en caso contrario presione cancelar':
                     no_debt = True
-                    print(f"  ⚠ Alerta detectada: SIN DEUDA")
+                    logger.info("Alerta detectada: SIN DEUDA")
                     alert.accept()
                 elif alert_text == 'bien raíz no registra cuotas de contribuciones no pagadas.':
                     exempt = True
-                    print(f"  ⚠ Alerta detectada: EXENTO")
+                    logger.info("Alerta detectada: EXENTO")
                     alert.accept()
                 elif alert_text == 'la propiedad posee convenio de pago automático (pac) con tesorería general de la república, si desea continuar con el pago, entonces presione aceptar, en caso contrario, presione cancelar':
                     auto_payment = True
-                    print(f"  ⚠ Alerta detectada: PAGO AUTOMATICO (PAC)")
+                    logger.info("Alerta detectada: PAGO AUTOMATICO (PAC)")
                     alert.accept()
                 elif alert_text == 'no existe una propiedad asociada a este nro de rol de avalúo.':
                     no_role = True
-                    print(f"  ⚠ Alerta detectada: ROL NO EXISTE")
+                    logger.info("Alerta detectada: ROL NO EXISTE")
                     alert.accept()
                 else:
-                    print(f"  ⚠ Alerta desconocida: '{alert.text}'")
+                    logger.warning(f"Alerta desconocida: '{alert.text}'")
                     alert.accept()
             except:
                 # No hay alerta
@@ -191,7 +195,7 @@ class Scrapper:
             
             cuotas_morosas = len(overdue_dates)
             cuotas_vigentes = len(vigentes)
-            print(f"  ✓ Cuotas encontradas: {cuotas_morosas} morosas, {cuotas_vigentes} vigentes")
+            logger.info(f"Cuotas encontradas: {cuotas_morosas} morosas, {cuotas_vigentes} vigentes")
             
             return scrapped_commune, role, overdue_dates, expire_date, amount_in_time, total_amount, vigentes, no_debt, exempt, auto_payment, no_role, False
 
@@ -217,7 +221,7 @@ class Scrapper:
         
         while should_retry and retry_count < max_retries:
             retry_count += 1
-            print(f"⚠ Reintento {retry_count}/{max_retries} - Sin cuotas morosas y sin alertas claras, recargando página...")
+            logger.warning(f"Reintento {retry_count}/{max_retries} - Sin cuotas morosas y sin alertas claras, recargando página...")
             scrapped_commune, role, overdue_dates, expire_date, amount_in_time, total_amount, vigentes, no_debt, exempt, auto_payment, no_role, has_error = perform_search_and_scrap()
             
             if has_error:

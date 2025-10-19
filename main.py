@@ -1,4 +1,9 @@
 from process_input import Reader
 from helpers.location_herper import LocationHelper
-reader = Reader('data.xls')
+
+# Número de workers paralelos (ajusta según tu necesidad)
+# Recomendado: 2-3 workers para empezar y evitar rate limiting del SII
+MAX_WORKERS = 5
+
+reader = Reader('data.xls', max_workers=MAX_WORKERS)
 reader.read()
