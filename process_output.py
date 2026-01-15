@@ -9,8 +9,8 @@ class Writer:
     def write(self, region, commune, rol_first, rol_second):
         wb = load_workbook("data/output.xlsx")
         ws = wb.worksheets[0]
-        do_format = False #SOLO UNO DEBERIA ESTAR ACTIVADO O NINGUNO
-        do_special_format = True
+        do_format = True #SOLO UNO DEBERIA ESTAR ACTIVADO O NINGUNO
+        do_special_format = False
         if self.data is None:
             ws.append([commune, '{}-{}'.format(rol_first, rol_second), 'SIN INFORMACION'])
         else:
